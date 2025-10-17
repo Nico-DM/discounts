@@ -57,25 +57,36 @@ class DiscountCalculator:
             self.current_price = Decimal('0')
         self.total_saved += discount_amount
 
-    def apply_discount(self, discount: str):
+    def _parse_discount(self, discount: str) -> tuple[str, Decimal]:
+        """Parsea el string de descuento y devuelve (tipo, valor)."""
         discount = discount.strip()
-
         if discount.endswith('%'):
             raw = discount[:-1].strip()
             try:
                 percentage = Decimal(raw)
             except (InvalidOperation, ValueError):
                 raise InvalidDiscountError("Formato de porcentaje inválido")
-            self._apply_percentage_discount(percentage)
-        elif discount.startswith('$'):
+            return ('percent', percentage)
+        if discount.startswith('$'):
             raw = discount[1:].strip()
             try:
                 fixed_amount = Decimal(raw)
             except (InvalidOperation, ValueError):
                 raise InvalidDiscountError("Formato de descuento fijo inválido")
-            self._apply_fixed_discount(fixed_amount)
-        else:
-            raise InvalidDiscountError("El tipo de descuento no es válido")
+            return ('fixed', fixed_amount)
+        raise InvalidDiscountError("El tipo de descuento no es válido")
+
+    def apply_discount(self, discount: str):
+        tipo, valor = self._parse_discount(discount)
+        if tipo == 'percent':
+            self._apply_percentage_discount(valor)
+        else:  # 'fixed'
+            self._apply_fixed_discount(valor)
+
+    def apply_discounts(self, discounts: Iterable[str]):
+        """Aplica secuencialmente una lista/iterable de descuentos."""
+        for d in discounts:
+            self.apply_discount(d)
 
     def get_final_price(self) -> Decimal:
         return self._q(self.current_price)
@@ -86,11 +97,8 @@ class DiscountCalculator:
 
 def calculate_discount(initial_price: int | float | Decimal, discounts: Optional[Iterable[str]] = None):
     calculator = DiscountCalculator(initial_price)
-
     if discounts:
-        for discount in discounts:
-            calculator.apply_discount(discount)
-
+        calculator.apply_discounts(discounts)
     return {
         'final_price': calculator.get_final_price(),
         'total_saved': calculator.get_total_saved()
