@@ -1,5 +1,6 @@
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 from typing import Optional, Iterable
+from enum import Enum  # Nuevo Enum
 
 
 class InvalidDiscountError(Exception):
@@ -8,6 +9,11 @@ class InvalidDiscountError(Exception):
 
 class InvalidPriceError(Exception):
     pass
+
+
+class DiscountType(Enum):  # Nuevo Enum para tipos de descuento internos
+    PERCENT = 'percent'
+    FIXED = 'fixed'
 
 
 class DiscountCalculator:
@@ -55,8 +61,8 @@ class DiscountCalculator:
             self.current_price = Decimal('0')
         self.total_saved += discount_amount
 
-    def _parse_discount(self, discount: str) -> tuple[str, Decimal]:
-        """Parsea el string de descuento y devuelve (tipo, valor)."""
+    def _parse_discount(self, discount: str) -> tuple[DiscountType, Decimal]:
+        """Parsea el string de descuento y devuelve (DiscountType, valor)."""
         discount = discount.strip()
         if discount.endswith('%'):
             raw = discount[:-1].strip()
@@ -64,21 +70,21 @@ class DiscountCalculator:
                 percentage = Decimal(raw)
             except (InvalidOperation, ValueError):
                 raise InvalidDiscountError("Formato de porcentaje inválido")
-            return ('percent', percentage)
+            return (DiscountType.PERCENT, percentage)
         if discount.startswith('$'):
             raw = discount[1:].strip()
             try:
                 fixed_amount = Decimal(raw)
             except (InvalidOperation, ValueError):
                 raise InvalidDiscountError("Formato de descuento fijo inválido")
-            return ('fixed', fixed_amount)
+            return (DiscountType.FIXED, fixed_amount)
         raise InvalidDiscountError("El tipo de descuento no es válido")
 
     def apply_discount(self, discount: str):
         tipo, valor = self._parse_discount(discount)
-        if tipo == 'percent':
+        if tipo is DiscountType.PERCENT:
             self._apply_percentage_discount(valor)
-        else:  # 'fixed'
+        else:  # DiscountType.FIXED
             self._apply_fixed_discount(valor)
 
     def apply_discounts(self, discounts: Iterable[str]):
@@ -101,3 +107,8 @@ def calculate_discount(initial_price: int | float | Decimal, discounts: Optional
         'final_price': calculator.get_final_price(),
         'total_saved': calculator.get_total_saved()
     }
+
+
+def simulate_discounts(initial_price: int | float | Decimal, discounts: Optional[Iterable[str]] = None):
+    """Función pura para simular descuentos sin exponer la clase (envoltorio)."""
+    return calculate_discount(initial_price, discounts)
