@@ -37,6 +37,8 @@ class DiscountCalculator:
             actual_discount = min(fixed_amount, self.current_price)
             self.current_price -= actual_discount
             self.total_saved += actual_discount
+        else:
+            raise InvalidDiscountError("El tipo de descuento no es válido")
 
     def get_final_price(self):
         return self.current_price.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
