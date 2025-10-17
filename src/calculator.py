@@ -33,11 +33,9 @@ class DiscountCalculator:
         """Aplica descuento porcentual, validando rango y evitando precio negativo."""
         if percentage < 0:
             raise InvalidDiscountError("Los descuentos no pueden ser negativos")
-        # Si porcentaje es 100% o más, el descuento es todo el precio actual
-        if percentage >= 100:
-            discount_amount = self.current_price
-        else:
-            discount_amount = self.current_price * (percentage / Decimal('100'))
+        # Simplificado: limita el porcentaje a 100 para evitar precio negativo sin branch separado
+        capped = min(percentage, Decimal('100'))
+        discount_amount = self.current_price * (capped / Decimal('100'))
         self._register_discount(discount_amount)
 
     def _apply_fixed_discount(self, amount: Decimal):
