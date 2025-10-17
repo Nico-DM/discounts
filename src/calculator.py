@@ -67,19 +67,20 @@ class DiscountCalculator:
     def _parse_discount(self, discount: str) -> tuple[DiscountType, Decimal]:
         """Parsea el string de descuento y devuelve (DiscountType, valor)."""
         discount = discount.strip()
+
+        def _to_decimal(raw: str) -> Decimal:
+            try:
+                return Decimal(raw)
+            except (InvalidOperation, ValueError):
+                raise InvalidDiscountError("Formato de descuento inválido")
+
         if discount.endswith('%'):
             raw = discount[:-1].strip()
-            try:
-                percentage = Decimal(raw)
-            except (InvalidOperation, ValueError):
-                raise InvalidDiscountError("Formato de porcentaje inválido")
+            percentage = _to_decimal(raw)
             return (DiscountType.PERCENT, percentage)
         if discount.startswith('$'):
             raw = discount[1:].strip()
-            try:
-                fixed_amount = Decimal(raw)
-            except (InvalidOperation, ValueError):
-                raise InvalidDiscountError("Formato de descuento fijo inválido")
+            fixed_amount = _to_decimal(raw)
             return (DiscountType.FIXED, fixed_amount)
         raise InvalidDiscountError("El tipo de descuento no es válido")
 
