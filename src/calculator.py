@@ -17,11 +17,14 @@ class DiscountType(Enum):  # Nuevo Enum para tipos de descuento internos
 
 
 class DiscountCalculator:
-    def __init__(self, initial_price: int | float | Decimal):
-        if initial_price < 0:
+    def __init__(self, initial_price: int | float | Decimal | str):
+        try:
+            price_decimal = Decimal(str(initial_price))
+        except (InvalidOperation, ValueError):
+            raise InvalidPriceError("El precio inicial debe ser numérico")
+        if price_decimal < 0:
             raise InvalidPriceError("El precio inicial no puede ser negativo")
-
-        self.initial_price = Decimal(str(initial_price))
+        self.initial_price = price_decimal
         self.current_price = self.initial_price
         self.total_saved = Decimal('0')
 
@@ -99,7 +102,7 @@ class DiscountCalculator:
         return self._q(self.total_saved)
 
 
-def calculate_discount(initial_price: int | float | Decimal, discounts: Optional[Iterable[str]] = None):
+def calculate_discount(initial_price: int | float | Decimal | str, discounts: Optional[Iterable[str]] = None):
     calculator = DiscountCalculator(initial_price)
     if discounts:
         calculator.apply_discounts(discounts)
@@ -109,6 +112,6 @@ def calculate_discount(initial_price: int | float | Decimal, discounts: Optional
     }
 
 
-def simulate_discounts(initial_price: int | float | Decimal, discounts: Optional[Iterable[str]] = None):
+def simulate_discounts(initial_price: int | float | Decimal | str, discounts: Optional[Iterable[str]] = None):
     """Función pura para simular descuentos sin exponer la clase (envoltorio)."""
     return calculate_discount(initial_price, discounts)
