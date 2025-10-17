@@ -1,0 +1,15 @@
+* discounts
+  * src
+    * *calculator.py*
+    * discounts
+      * *proportional.py*
+      * *fixed.py*
+    * multiple
+      * *sequential.py*
+  * tests
+    * *calculator_test.py*
+    * discounts
+      * *proportional_test.py*
+      * *fixed_test.py*
+    * multiple
+      * *sequential_test.py*
